@@ -51,6 +51,7 @@ export const taskIdSchema = Joi.object({
   }),
 }).options({ stripUnknown: true });
 
+// Define the schema for the task query
 export const getTaskQuerySchema = Joi.object({
   q: Joi.string().optional(),
   page: Joi.number()

@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { Roles } from "../constants/Roles";
 import { BadRequestError, NotFoundError } from "../error/Error";
 
+// Get all users
 export const getUsers = async (query: getUserQuery) => {
   const data = await UserModel.UserModel.getUsers(query);
   if (!data) throw new NotFoundError("No users found");
@@ -17,6 +18,7 @@ export const getUsers = async (query: getUserQuery) => {
   return { data, meta };
 };
 
+// Create a new user
 export async function createUser(user: User, createdBy: User) {
   const existingUser = await getUserByEmail(user.email);
   if (existingUser) {
@@ -33,22 +35,27 @@ export async function createUser(user: User, createdBy: User) {
   return { message: "User created" };
 }
 
+// function to create user roles
 async function createUserRoles(userId: number, roleId: number) {
   await UserModel.UserModel.createUserRoles(userId, roleId);
 }
 
+// function to get user by email
 export function getUserByEmail(email: string) {
   return UserModel.UserModel.getUserByEmail(email);
 }
 
+// function to get user roles
 export function getUserRoles(userId: number) {
   return UserModel.UserModel.getUserRoles(userId);
 }
 
+// function to get role permissions
 export function getRolePermissions(roleId: number) {
   return UserModel.UserModel.getRolePermissions(roleId);
 }
 
+// function to get role name by role id
 export function getRoleName(roleId: number) {
   return UserModel.UserModel.getRoleName(roleId);
 }
@@ -77,7 +84,7 @@ export const deleteUsers = async (id: number) => {
   // Check if users exists
   if (!user) throw new NotFoundError("users not found");
 
-  // Delete users from userss array
+  //deleting the user's data and then deleting the user
   await UserModel.UserModel.deleteUserTasks(id.toString());
   await UserModel.UserModel.deleteUserRoles(id.toString());
   await UserModel.UserModel.delete(id.toString());

@@ -18,6 +18,7 @@ export const getTasks = async (query: getTaskQuery) => {
   return { data, meta };
 };
 
+// Get tasks by user ID
 export const getTasksByUserId = async (userId: number, query: getTaskQuery) => {
   const data = await TaskModel.TaskModel.getTasksByUserId(userId, query);
 
@@ -70,7 +71,6 @@ export const deleteTask = async (id: number, userId: number) => {
   const taskOfUser = await TaskModel.TaskModel.getUserTask(id, userId);
   if (!taskOfUser) throw new NotFoundError("No tasks found");
 
-  // Delete task from tasks array
   await TaskModel.TaskModel.deleteTask(id, userId);
 
   return { message: "Task deleted" };

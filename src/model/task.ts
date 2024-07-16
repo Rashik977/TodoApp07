@@ -2,7 +2,9 @@ import { TASK_STATUS } from "../constants/TaskStatus";
 import { getTaskQuery, Task } from "../interfaces/task";
 import { BaseModel } from "./base";
 
+// Task model class
 export class TaskModel extends BaseModel {
+  // Function to create a task
   static async create(task: Task, statusId: number) {
     const taskToCreate = {
       userId: task.userId,
@@ -13,6 +15,7 @@ export class TaskModel extends BaseModel {
     await this.queryBuilder().insert(taskToCreate).table("tasks");
   }
 
+  // Function to get status id
   static async getStatusId(status: TASK_STATUS) {
     const statusId = await this.queryBuilder()
       .select("id")
@@ -21,6 +24,7 @@ export class TaskModel extends BaseModel {
     return statusId[0].id;
   }
 
+  // Function to get tasks by user id
   static getTasksByUserId(userId: number, filter: getTaskQuery) {
     const { q, page, size } = filter;
     const query = this.queryBuilder()
@@ -35,6 +39,7 @@ export class TaskModel extends BaseModel {
     return query;
   }
 
+  // Function to count tasks by user id
   static countByUserId(userId: number, filter: getTaskQuery) {
     const { q } = filter;
     const query = this.queryBuilder()
@@ -49,6 +54,7 @@ export class TaskModel extends BaseModel {
     return query;
   }
 
+  // Function to get all tasks
   static getTasks(filter: getTaskQuery) {
     const { q, page, size } = filter;
 
@@ -63,6 +69,7 @@ export class TaskModel extends BaseModel {
     return query;
   }
 
+  // Function to count all tasks
   static count(filter: getTaskQuery) {
     const { q } = filter;
     const query = this.queryBuilder().count("*").table("tasks").first();
@@ -73,6 +80,7 @@ export class TaskModel extends BaseModel {
     return query;
   }
 
+  // Function to get task by id and user id
   static async getUserTask(id: number, userId: number) {
     return await this.queryBuilder()
       .select("*")
@@ -81,6 +89,7 @@ export class TaskModel extends BaseModel {
       .first();
   }
 
+  // Function to update a task
   static async updateTask(id: number, task: Task) {
     const taskToUpdate = {
       title: task.title,
@@ -91,69 +100,8 @@ export class TaskModel extends BaseModel {
     await this.queryBuilder().update(taskToUpdate).table("tasks").where({ id });
   }
 
+  // Function to delete a task
   static async deleteTask(id: number, userId: number) {
     await this.queryBuilder().delete().table("tasks").where({ id, userId });
   }
 }
-
-// Array to store tasks
-const tasks: Task[] = [
-  {
-    userId: 1,
-    id: 1,
-    title: "Complete assignment",
-    status: TASK_STATUS.NOTSTARTED,
-  },
-  {
-    userId: 2,
-    id: 2,
-    title: "Wash the dishes",
-    status: TASK_STATUS.PENDING,
-  },
-  {
-    userId: 1,
-    id: 3,
-    title: "learn about containers and docker",
-    status: TASK_STATUS.PENDING,
-  },
-  {
-    userId: 1,
-    id: 4,
-    title: "call mom",
-    status: TASK_STATUS.DONE,
-  },
-];
-
-export const addTask = (task: Task) => {
-  tasks.push({
-    userId: task.userId,
-    id: tasks.length + 1,
-    title: task.title,
-    status: task.status,
-  });
-};
-
-export const getTasks = () => {
-  return tasks;
-};
-
-export const getTasksByUserId = (userId: number) => {
-  return tasks.filter((task) => task.userId === userId);
-};
-
-export const findTaskIndexById = (id: number): number => {
-  return tasks.findIndex((task) => task.id === id);
-};
-
-export const findTaskById = (id: number): Task | undefined => {
-  return tasks.find((task) => task.id === id);
-};
-
-export const updateTask = (id: number, updatedData: Task, index: number) => {
-  console.log(index, updatedData);
-  tasks[index] = { ...tasks[index], ...updatedData };
-};
-
-export const deleteTask = (index: number): void => {
-  tasks.splice(index, 1);
-};
