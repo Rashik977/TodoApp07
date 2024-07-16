@@ -6,3 +6,9 @@ export interface Task {
   title: string;
   status: TASK_STATUS;
 }
+
+export interface getTaskQuery {
+  q?: string;
+  page?: number;
+  size?: number;
+}

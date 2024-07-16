@@ -1,4 +1,4 @@
-import { NextFunction, Request as ExpressRequest, Response } from "express";
+import { NextFunction, Response } from "express";
 import { Request } from "../interfaces/auth";
 import * as UserService from "../service/user";
 
@@ -10,14 +10,13 @@ const logger = loggerWithNameSpace("UserController");
 
 // Get all users
 export async function getUsers(
-  req: ExpressRequest<any, any, any, getUserQuery>,
+  req: Request<any, any, any, getUserQuery>,
   res: Response,
   next: NextFunction
 ) {
   try {
     logger.info("Fetching all users");
     const { query } = req;
-
     res.status(HTTP.OK).json(await UserService.getUsers(query));
   } catch (e) {
     logger.error("Error fetching users", { error: e });
@@ -27,7 +26,7 @@ export async function getUsers(
 
 // Create a new user
 export async function createUser(
-  req: Request,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
 ) {
@@ -45,7 +44,7 @@ export async function createUser(
 
 // Update a user
 export async function updateUsers(
-  req: Request,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
 ) {
@@ -63,7 +62,7 @@ export async function updateUsers(
 
 // Delete a User
 export async function deleteUsers(
-  req: Request,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
 ) {

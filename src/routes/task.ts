@@ -7,16 +7,27 @@ import {
   updateTask,
 } from "../controller/task";
 import { authenticate, authorize } from "../middlewares/auth";
-import { validateReqBody, validateReqParams } from "../middlewares/validator";
+import {
+  validateReqBody,
+  validateReqParams,
+  validateReqQuery,
+} from "../middlewares/validator";
 import {
   createTaskBodySchema,
   updateTaskBodySchema,
   taskIdSchema,
+  getTaskQuerySchema,
 } from "../schema/task";
 
 const tasksRoutes = express.Router();
 
-tasksRoutes.get("/", authenticate, authorize("tasks.get"), getTasks);
+tasksRoutes.get(
+  "/",
+  authenticate,
+  authorize("tasks.get"),
+  validateReqQuery(getTaskQuerySchema),
+  getTasks
+);
 
 tasksRoutes.get(
   "/:id",

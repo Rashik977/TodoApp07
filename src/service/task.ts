@@ -1,73 +1,77 @@
 import { TASK_STATUS } from "../constants/TaskStatus";
 import { BadRequestError, NotFoundError } from "../error/Error";
-import { Task } from "../interfaces/task";
+import { getTaskQuery, Task } from "../interfaces/task";
 
 import * as TaskModel from "../model/task";
 
 // Get all tasks
-export const getTasks = () => {
-  const tasks = TaskModel.getTasks();
+export const getTasks = async (query: getTaskQuery) => {
+  const data = await TaskModel.TaskModel.getTasks(query);
+  if (!data) throw new NotFoundError("No tasks found");
 
-  if (!tasks) throw new NotFoundError("No tasks found");
-
-  return tasks;
+  const count = await TaskModel.TaskModel.count(query);
+  const meta = {
+    page: query.page,
+    size: data.length,
+    total: +count.count,
+  };
+  return { data, meta };
 };
 
-export const getTasksByUserId = (userId: number) => {
-  const tasks = TaskModel.getTasksByUserId(userId);
+export const getTasksByUserId = async (userId: number, query: getTaskQuery) => {
+  const data = await TaskModel.TaskModel.getTasksByUserId(userId, query);
 
-  if (!tasks) throw new NotFoundError("No tasks found");
+  if (!data) throw new NotFoundError("No tasks found");
 
-  return tasks;
+  const count = await TaskModel.TaskModel.countByUserId(userId, query);
+  const meta = {
+    page: query.page,
+    size: data.length,
+    total: +count.count,
+  };
+  return { data, meta };
 };
 
 // Get task from the provided ID
-export const getTaskById = (id: number, userId: number) => {
-  const taskOfUser = TaskModel.findTaskById(id);
+export const getTaskById = async (id: number, userId: number) => {
+  const taskOfUser = await TaskModel.TaskModel.getUserTask(id, userId);
 
   if (!taskOfUser) throw new NotFoundError("No tasks found");
-
-  if (taskOfUser.userId !== userId) throw new NotFoundError("No tasks found");
 
   return taskOfUser;
 };
 
 // create a task
-export const createTask = (task: Task) => {
-  TaskModel.addTask(task);
+export const createTask = async (task: Task) => {
+  const statusId = await TaskModel.TaskModel.getStatusId(task.status);
+  await TaskModel.TaskModel.create(task, statusId);
 
   return { message: "Task created" };
 };
 
 // function to update a task
-export const updateTask = (id: number, task: Task, userId: number) => {
-  const taskIndex = TaskModel.findTaskIndexById(id);
-  const taskOfUser = TaskModel.findTaskById(id);
+export const updateTask = async (id: number, task: Task, userId: number) => {
+  const taskOfUser = await TaskModel.TaskModel.getUserTask(id, userId);
 
   if (!taskOfUser) throw new NotFoundError("No tasks found");
-  if (taskOfUser.userId !== userId) throw new NotFoundError("No tasks found");
 
-  // Check if task exists
-  if (taskIndex === -1) throw new NotFoundError("No tasks found");
+  if (task.status) {
+    const statusId = await TaskModel.TaskModel.getStatusId(task.status);
+    task.status = statusId;
+  }
 
-  TaskModel.updateTask(id, task, taskIndex);
+  await TaskModel.TaskModel.updateTask(id, task);
 
   return { message: "Task updated" };
 };
 
 // function to delete a task
-export const deleteTask = (id: number, userId: number) => {
-  const taskIndex = TaskModel.findTaskIndexById(id);
-  const taskOfUser = TaskModel.findTaskById(id);
-
+export const deleteTask = async (id: number, userId: number) => {
+  const taskOfUser = await TaskModel.TaskModel.getUserTask(id, userId);
   if (!taskOfUser) throw new NotFoundError("No tasks found");
-  if (taskOfUser.userId !== userId) throw new NotFoundError("No tasks found");
-
-  // Check if task exists
-  if (taskIndex === -1) throw new NotFoundError("No tasks found");
 
   // Delete task from tasks array
-  TaskModel.deleteTask(taskIndex);
+  await TaskModel.TaskModel.deleteTask(id, userId);
 
   return { message: "Task deleted" };
 };
