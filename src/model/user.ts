@@ -83,10 +83,27 @@ export class UserModel extends BaseModel {
   }
 
   static getUsers(filter: getUserQuery) {
-    const { q } = filter;
+    const { q, page, size } = filter;
 
-    const query = this.queryBuilder().select("*").table("users").limit(10);
-    return this.queryBuilder().select("*").table("users");
+    const query = this.queryBuilder()
+      .select("id", "email", "name")
+      .table("users")
+      .limit(size)
+      .offset((page - 1) * size);
+    if (q) {
+      query.whereLike("name", `%${q}%`);
+    }
+    return query;
+  }
+
+  static count(filter: getUserQuery) {
+    const { q } = filter;
+    const query = this.queryBuilder().count("*").table("users").first();
+
+    if (q) {
+      query.whereLike("name", `%${q}%`);
+    }
+    return query;
   }
 }
 

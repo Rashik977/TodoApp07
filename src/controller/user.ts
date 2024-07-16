@@ -8,7 +8,7 @@ import { getUserQuery } from "../interfaces/User";
 const logger = loggerWithNameSpace("UserController");
 
 // Get all users
-export function getUsers(
+export async function getUsers(
   req: Request<any, any, any, getUserQuery>,
   res: Response,
   next: NextFunction
@@ -17,7 +17,7 @@ export function getUsers(
     logger.info("Fetching all users");
     const { query } = req;
 
-    res.status(HTTP.OK).json(UserService.getUsers(query));
+    res.status(HTTP.OK).json(await UserService.getUsers(query));
   } catch (e) {
     logger.error("Error fetching users", { error: e });
     next(e);

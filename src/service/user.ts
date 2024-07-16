@@ -2,15 +2,19 @@ import { getUserQuery, User } from "../interfaces/User";
 import * as UserModel from "../model/user";
 import bcrypt from "bcrypt";
 import { Roles } from "../constants/Roles";
-import { permissions } from "../constants/Permissions";
 import { BadRequestError, NotFoundError } from "../error/Error";
 
-export const getUsers = (query: getUserQuery) => {
-  const users = UserModel.getUsers(query);
+export const getUsers = async (query: getUserQuery) => {
+  const data = await UserModel.UserModel.getUsers(query);
+  if (!data) throw new NotFoundError("No users found");
 
-  if (!users) throw new NotFoundError("No users found");
-
-  return users;
+  const count = await UserModel.UserModel.count(query);
+  const meta = {
+    page: query.page,
+    size: data.length,
+    total: +count.count,
+  };
+  return { data, meta };
 };
 
 export async function createUser(user: User) {
