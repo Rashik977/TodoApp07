@@ -17,13 +17,13 @@ export const getUsers = async (query: getUserQuery) => {
   return { data, meta };
 };
 
-export async function createUser(user: User) {
+export async function createUser(user: User, createdBy: User) {
   const existingUser = await getUserByEmail(user.email);
   if (existingUser) {
     throw new BadRequestError("User already exists");
   }
   const password = await bcrypt.hash(user.password, 10);
-  await UserModel.UserModel.create({ ...user, password });
+  await UserModel.UserModel.create({ ...user, password }, createdBy);
 
   const newUser = await getUserByEmail(user.email);
 
@@ -54,28 +54,33 @@ export function getRoleName(roleId: number) {
 }
 
 // function to update a users
-export const updateUsers = async (id: number, users: User) => {
-  const usersIndex = UserModel.findUserIndexById(id);
+export const updateUsers = async (id: number, users: User, updatedBy: User) => {
+  const user = await UserModel.UserModel.getUserById(id.toString());
 
   // Check if users exists
-  if (usersIndex === -1) throw new NotFoundError("users not found");
+  if (!user) throw new NotFoundError("users not found");
 
   const password = await bcrypt.hash(users.password, 10);
 
-  UserModel.updateUser(id, { ...users, password }, usersIndex);
+  await UserModel.UserModel.update(
+    id.toString(),
+    { ...users, password },
+    updatedBy
+  );
 
   return { message: "User updated" };
 };
 
 // function to delete a users
-export const deleteUsers = (id: number) => {
-  const usersIndex = UserModel.findUserIndexById(id);
-
+export const deleteUsers = async (id: number) => {
+  const user = await UserModel.UserModel.getUserById(id.toString());
   // Check if users exists
-  if (usersIndex === -1) throw new NotFoundError("users not found");
+  if (!user) throw new NotFoundError("users not found");
 
   // Delete users from userss array
-  UserModel.deleteUser(usersIndex);
+  await UserModel.UserModel.deleteUserTasks(id.toString());
+  await UserModel.UserModel.deleteUserRoles(id.toString());
+  await UserModel.UserModel.delete(id.toString());
 
   return { message: "User deleted" };
 };

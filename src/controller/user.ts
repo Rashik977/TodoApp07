@@ -1,4 +1,5 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request as ExpressRequest, Response } from "express";
+import { Request } from "../interfaces/auth";
 import * as UserService from "../service/user";
 
 import loggerWithNameSpace from "../utils/logger";
@@ -9,7 +10,7 @@ const logger = loggerWithNameSpace("UserController");
 
 // Get all users
 export async function getUsers(
-  req: Request<any, any, any, getUserQuery>,
+  req: ExpressRequest<any, any, any, getUserQuery>,
   res: Response,
   next: NextFunction
 ) {
@@ -34,7 +35,7 @@ export async function createUser(
 
   try {
     logger.info("Creating a new user", { user: body });
-    const message = await UserService.createUser(body);
+    const message = await UserService.createUser(body, req.user!);
     res.status(HTTP.CREATED).json(message);
   } catch (e) {
     logger.error("Error creating user", { error: e });
@@ -51,8 +52,8 @@ export async function updateUsers(
   const id = parseInt(req.params.id);
 
   try {
-    logger.info("Updating user", { id });
-    const message = await UserService.updateUsers(id, req.body);
+    logger.info("Updating user");
+    const message = await UserService.updateUsers(id, req.body, req.user!);
     res.status(HTTP.OK).json(message);
   } catch (e) {
     logger.error("Error updating user", { error: e });
@@ -61,11 +62,15 @@ export async function updateUsers(
 }
 
 // Delete a User
-export function deleteUsers(req: Request, res: Response, next: NextFunction) {
+export async function deleteUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const id = parseInt(req.params.id);
   try {
     logger.info("Deleting user", { id });
-    const message = UserService.deleteUsers(id);
+    const message = await UserService.deleteUsers(id);
     res.status(HTTP.OK).json(message);
   } catch (e) {
     logger.error("Error deleting user", { error: e });

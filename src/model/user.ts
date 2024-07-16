@@ -4,11 +4,12 @@ import { getUserQuery, User } from "../interfaces/User";
 import { BaseModel } from "./base";
 
 export class UserModel extends BaseModel {
-  static async create(user: User) {
+  static async create(user: User, createdBy: User) {
     const userTOCreate = {
       name: user.name,
       email: user.email,
       password: user.password,
+      createdBy: createdBy.id,
     };
 
     await this.queryBuilder().insert(userTOCreate).table("users");
@@ -71,17 +72,6 @@ export class UserModel extends BaseModel {
     };
     await this.queryBuilder().insert(userRoles).table("user_roles");
   }
-
-  static async update(user: User, id: string) {
-    const userToUpdate = {
-      name: user.name,
-      email: user.email,
-      password: user.password,
-      updatedAt: new Date(),
-    };
-    await this.queryBuilder().update(userToUpdate).table("users").where({ id });
-  }
-
   static getUsers(filter: getUserQuery) {
     const { q, page, size } = filter;
 
@@ -105,6 +95,40 @@ export class UserModel extends BaseModel {
     }
     return query;
   }
+
+  static async getUserById(id: string) {
+    return await this.queryBuilder()
+      .select("*")
+      .table("users")
+      .where({ id })
+      .first();
+  }
+
+  static async update(id: string, user: User, updatedBy: User) {
+    const userToUpdate = {
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      updatedAt: new Date(),
+      updatedBy: updatedBy.id,
+    };
+    const query = this.queryBuilder()
+      .update(userToUpdate)
+      .table("users")
+      .where({ id });
+    await query;
+  }
+  static delete(id: string) {
+    return this.queryBuilder().delete().table("users").where({ id });
+  }
+
+  static deleteUserRoles(userId: string) {
+    return this.queryBuilder().delete().table("user_roles").where({ userId });
+  }
+
+  static deleteUserTasks(userId: string) {
+    return this.queryBuilder().delete().table("tasks").where({ userId });
+  }
 }
 
 // Array to store users, 1 dummy user for testing
@@ -126,25 +150,6 @@ export const users: User[] = [
     permissions: permissions[Roles.SUPER],
   },
 ];
-
-export function getUsers(query: getUserQuery) {
-  const { q } = query;
-  if (q) {
-    return users.filter(({ id }) => id.includes(q));
-  }
-  return users;
-}
-
-export function createUser(user: User) {
-  return users.push({
-    ...user,
-    id: `${users.length + 1}`,
-  });
-}
-
-export function getUserByEmail(email: string) {
-  return users.find((user) => user.email === email);
-}
 
 export const updateUser = (id: number, updatedData: User, index: number) => {
   users[index] = { ...users[index], ...updatedData };
